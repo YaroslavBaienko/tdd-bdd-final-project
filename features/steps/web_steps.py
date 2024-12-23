@@ -32,7 +32,6 @@ from selenium.webdriver.support import expected_conditions
 
 ID_PREFIX = 'product_'
 
-
 @when('I visit the "Home Page"')
 def step_impl(context):
     """ Make a call to the base URL """
@@ -76,7 +75,7 @@ def step_impl(context, element_name):
     assert(element.get_attribute('value') == u'')
 
 ##################################################################
-# These two function simulate copy and paste
+# These two functions simulate copy and paste
 ##################################################################
 @when('I copy the "{element_name}" field')
 def step_impl(context, element_name):
@@ -97,22 +96,19 @@ def step_impl(context, element_name):
     element.send_keys(context.clipboard)
 
 ##################################################################
-# This code works because of the following naming convention:
-# The buttons have an id in the html hat is the button text
-# in lowercase followed by '-btn' so the Clean button has an id of
-# id='clear-btn'. That allows us to lowercase the name and add '-btn'
-# to get the element id of any button
+# Button Click
 ##################################################################
-
-## UPDATE CODE HERE ##
+@when('I press the "{button}" button')
+def step_impl(context, button):
+    button_id = button.lower().replace(' ', '_') + '-btn'
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.element_to_be_clickable((By.ID, button_id))
+    )
+    element.click()
 
 ##################################################################
-# This code works because of the following naming convention:
-# The id field for text input in the html is the element name
-# prefixed by ID_PREFIX so the Name field has an id='pet_name'
-# We can then lowercase the name and prefix with pet_ to get the id
+# Field Verification
 ##################################################################
-
 @then('I should see "{text_string}" in the "{element_name}" field')
 def step_impl(context, text_string, element_name):
     element_id = ID_PREFIX + element_name.lower().replace(' ', '_')
@@ -132,3 +128,34 @@ def step_impl(context, element_name, text_string):
     )
     element.clear()
     element.send_keys(text_string)
+
+##################################################################
+# Result Verification
+##################################################################
+@then('I should see "{name}" in the results')
+def step_impl(context, name):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'),
+            name
+        )
+    )
+    assert(found, f'"{name}" was not found in the results.')
+
+@then('I should not see "{name}" in the results')
+def step_impl(context, name):
+    element = context.driver.find_element(By.ID, 'search_results')
+    assert(name not in element.text, f'"{name}" was found in the results but should not be.')
+
+##################################################################
+# Message Verification
+##################################################################
+@then('I should see the message "{message}"')
+def step_impl(context, message):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'flash_message'),
+            message
+        )
+    )
+    assert(found, f'"{message}" was not found in the flash message.')
